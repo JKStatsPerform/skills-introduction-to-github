@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Basketball Clinching Dashboard - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .demo-notice {
+            background: #ffc107;
+            color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .conference {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .conference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .conference-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .conference-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .standings-table thead {
+            background-color: #f5f5f5;
+        }
+
+        .standings-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .standings-table th:first-child {
+            width: 50px;
+        }
+
+        .standings-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .standings-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .team-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .clinched {
+            background-color: #d4edda !important;
+            border-left: 5px solid #28a745;
+        }
+
+        .clinched .team-name {
+            color: #155724;
+        }
+
+        .clinched-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .record {
+            font-weight: 500;
+        }
+
+        .win-pct {
+            color: #666;
+        }
+
+        .games-back {
+            color: #999;
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .legend {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.clinched {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .conference-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .standings-table {
+                font-size: 0.9em;
+            }
+
+            .legend {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 College Basketball Clinching Dashboard</h1>
+            <div class="subtitle">Conference Championships 2026 - Demo</div>
+        </header>
+
+        <div class="demo-notice">
+            📊 DEMO MODE: This page uses mock data to demonstrate the dashboard functionality
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color clinched"></div>
+                <span><strong>Clinched Conference</strong> - Team has secured conference title</span>
+            </div>
+        </div>
+
+        <div id="conferences"></div>
+    </div>
+
+    <script>
+        // Configuration for conference games
+        const CONFERENCE_GAMES = {
+            'American Athletic': 18,
+            'Big Ten': 20,
+            'Big East': 18
+        };
+
+        // Mock data for demonstration
+        const MOCK_DATA = {
+            conferences: [
+                {
+                    name: 'Big Ten',
+                    standings: [
+                        {
+                            team: { id: 1, name: 'Purdue', displayName: 'Purdue Boilermakers' },
+                            stats: { conferenceWins: 16, conferenceLosses: 2, wins: 26, losses: 3, gamesBack: '0' }
+                        },
+                        {
+                            team: { id: 2, name: 'Illinois', displayName: 'Illinois Fighting Illini' },
+                            stats: { conferenceWins: 14, conferenceLosses: 4, wins: 23, losses: 6, gamesBack: '2' }
+                        },
+                        {
+                            team: { id: 3, name: 'Wisconsin', displayName: 'Wisconsin Badgers' },
+                            stats: { conferenceWins: 13, conferenceLosses: 5, wins: 21, losses: 8, gamesBack: '3' }
+                        },
+                        {
+                            team: { id: 4, name: 'Michigan State', displayName: 'Michigan State Spartans' },
+                            stats: { conferenceWins: 12, conferenceLosses: 6, wins: 20, losses: 9, gamesBack: '4' }
+                        },
+                        {
+                            team: { id: 5, name: 'Iowa', displayName: 'Iowa Hawkeyes' },
+                            stats: { conferenceWins: 11, conferenceLosses: 7, wins: 19, losses: 10, gamesBack: '5' }
+                        }
+                    ]
+                },
+                {
+                    name: 'Big East',
+                    standings: [
+                        {
+                            team: { id: 11, name: 'UConn', displayName: 'UConn Huskies' },
+                            stats: { conferenceWins: 14, conferenceLosses: 3, wins: 25, losses: 4, gamesBack: '0' }
+                        },
+                        {
+                            team: { id: 12, name: 'Marquette', displayName: 'Marquette Golden Eagles' },
+                            stats: { conferenceWins: 13, conferenceLosses: 4, wins: 22, losses: 7, gamesBack: '1' }
+                        },
+                        {
+                            team: { id: 13, name: 'Creighton', displayName: 'Creighton Bluejays' },
+                            stats: { conferenceWins: 11, conferenceLosses: 6, wins: 20, losses: 9, gamesBack: '3' }
+                        },
+                        {
+                            team: { id: 14, name: 'Villanova', displayName: 'Villanova Wildcats' },
+                            stats: { conferenceWins: 10, conferenceLosses: 7, wins: 18, losses: 11, gamesBack: '4' }
+                        }
+                    ]
+                },
+                {
+                    name: 'American Athletic',
+                    standings: [
+                        {
+                            team: { id: 21, name: 'Memphis', displayName: 'Memphis Tigers' },
+                            stats: { conferenceWins: 15, conferenceLosses: 2, wins: 24, losses: 5, gamesBack: '0' }
+                        },
+                        {
+                            team: { id: 22, name: 'Temple', displayName: 'Temple Owls' },
+                            stats: { conferenceWins: 12, conferenceLosses: 5, wins: 20, losses: 9, gamesBack: '3' }
+                        },
+                        {
+                            team: { id: 23, name: 'SMU', displayName: 'SMU Mustangs' },
+                            stats: { conferenceWins: 11, conferenceLosses: 6, wins: 19, losses: 10, gamesBack: '4' }
+                        },
+                        {
+                            team: { id: 24, name: 'Houston', displayName: 'Houston Cougars' },
+                            stats: { conferenceWins: 10, conferenceLosses: 7, wins: 18, losses: 11, gamesBack: '5' }
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Function to calculate if a team has clinched
+        function hasTeamClinched(team, conference, standings) {
+            const conferenceName = conference.name;
+            const totalGames = CONFERENCE_GAMES[conferenceName];
+            
+            if (!totalGames) {
+                return false;
+            }
+
+            const teamWins = team.stats.conferenceWins || 0;
+            const teamLosses = team.stats.conferenceLosses || 0;
+            const teamGamesPlayed = teamWins + teamLosses;
+            const teamGamesRemaining = totalGames - teamGamesPlayed;
+
+            // Find second place team
+            const sortedStandings = [...standings].sort((a, b) => {
+                const aWins = a.stats.conferenceWins || 0;
+                const bWins = b.stats.conferenceWins || 0;
+                return bWins - aWins;
+            });
+
+            // If this is not the first place team, they haven't clinched
+            if (sortedStandings[0].team.id !== team.team.id) {
+                return false;
+            }
+
+            // Get the second place team
+            const secondPlaceTeam = sortedStandings[1];
+            if (!secondPlaceTeam) {
+                return false;
+            }
+
+            const secondPlaceWins = secondPlaceTeam.stats.conferenceWins || 0;
+            const secondPlaceLosses = secondPlaceTeam.stats.conferenceLosses || 0;
+            const secondPlaceGamesPlayed = secondPlaceWins + secondPlaceLosses;
+            const secondPlaceGamesRemaining = totalGames - secondPlaceGamesPlayed;
+
+            // Maximum wins second place can get
+            const secondPlaceMaxWins = secondPlaceWins + secondPlaceGamesRemaining;
+
+            // Team has clinched if second place cannot catch them
+            return teamWins > secondPlaceMaxWins;
+        }
+
+        // Function to render a conference
+        function renderConference(conference) {
+            const conferenceName = conference.name;
+            const standings = conference.standings || [];
+            const totalGames = CONFERENCE_GAMES[conferenceName];
+
+            if (!totalGames) {
+                return '';
+            }
+
+            let html = `
+                <div class="conference">
+                    <div class="conference-header">
+                        <div class="conference-name">${conferenceName}</div>
+                        <div class="conference-info">${totalGames} Conference Games</div>
+                    </div>
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Conf W-L</th>
+                                <th>Overall W-L</th>
+                                <th>Conf PCT</th>
+                                <th>GB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            standings.forEach((teamData, index) => {
+                const team = teamData.team;
+                const stats = teamData.stats;
+                const rank = index + 1;
+                
+                const confWins = stats.conferenceWins || 0;
+                const confLosses = stats.conferenceLosses || 0;
+                const overallWins = stats.wins || 0;
+                const overallLosses = stats.losses || 0;
+                const confPct = confWins + confLosses > 0 ? 
+                    (confWins / (confWins + confLosses)).toFixed(3) : '.000';
+                const gamesBack = stats.gamesBack || '0';
+
+                const clinched = hasTeamClinched(teamData, conference, standings);
+                const clinchClass = clinched ? 'clinched' : '';
+                const clinchBadge = clinched ? '<span class="clinched-badge">CLINCHED</span>' : '';
+
+                html += `
+                    <tr class="${clinchClass}">
+                        <td class="rank">${rank}</td>
+                        <td class="team-name">${team.displayName || team.name}${clinchBadge}</td>
+                        <td class="record">${confWins}-${confLosses}</td>
+                        <td class="record">${overallWins}-${overallLosses}</td>
+                        <td class="win-pct">${confPct}</td>
+                        <td class="games-back">${gamesBack}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Function to display standings with mock data
+        function loadStandings() {
+            const conferencesDiv = document.getElementById('conferences');
+            
+            let html = '';
+            MOCK_DATA.conferences.forEach(conference => {
+                html += renderConference(conference);
+            });
+            
+            conferencesDiv.innerHTML = html;
+        }
+
+        // Load standings when page loads
+        document.addEventListener('DOMContentLoaded', loadStandings);
+    </script>
+</body>
+</html>
