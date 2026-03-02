@@ -433,12 +433,10 @@
                 const playoffCutoff = conferenceTeams.find(t => parseInt(t.conferenceRank) === PLAYOFF_SPOTS);
                 if (playoffCutoff) {
                     const cutoffWins = parseInt(playoffCutoff.overallWins || 0);
-                    const cutoffLosses = parseInt(playoffCutoff.overallLosses || 0);
-                    const cutoffGamesPlayed = cutoffWins + cutoffLosses;
-                    const cutoffRemaining = TOTAL_NBA_GAMES - cutoffGamesPlayed;
-                    const cutoffMaxWins = cutoffWins + cutoffRemaining;
                     const maxWins = wins + gamesRemaining;
-                    eliminationNumber = Math.max(0, cutoffMaxWins - maxWins + 1);
+                    // Elimination number: cutoff team wins + this team losses = elimination
+                    // E# = (cutoff wins + 1) - max possible wins for this team
+                    eliminationNumber = Math.max(0, cutoffWins + 1 - maxWins);
                 }
             }
             
