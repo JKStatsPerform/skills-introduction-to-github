@@ -88,6 +88,14 @@ The dashboard includes all 31 NCAA Division I conferences with their specific co
 4. **Start Monitoring**: Click "Start Monitoring" to begin watching for playoff clinches
 5. **Automatic Alerts**: When a team clinches a playoff spot, the service automatically sends a formatted alert to your Teams channel
 
+**⚠️ CORS Note for Production Deployment:**
+When running the service from a local file or simple web server, you may encounter CORS (Cross-Origin Resource Sharing) errors when fetching from the Stats API. For production use, deploy the service on:
+- A web server with a backend proxy that fetches the API data server-side
+- A serverless function (Azure Functions, AWS Lambda, etc.) that handles API calls
+- Or configure CORS headers if you control the API endpoint
+
+The service includes robust error handling and will automatically retry failed requests every 5 minutes.
+
 ### College Basketball Dashboard
 
 Simply open `index.html` in a web browser. The dashboard will:
@@ -113,6 +121,35 @@ Data is fetched from the Stats Perform CBK API:
 https://prod.origin.api.stats.com/v1/stats/basketball/cbk/standings
 ```
 
+## 🚀 Production Deployment Recommendations
+
+### For NBA Playoff Alert Service
+
+The service is designed as a production-lean MVP. For optimal production deployment:
+
+**Option 1: Serverless Function (Recommended)**
+- Deploy as an Azure Function, AWS Lambda, or Google Cloud Function
+- Schedule to run every 5 minutes using cron triggers
+- Eliminates CORS issues and provides reliable execution
+- Minimal infrastructure costs
+
+**Option 2: Backend Proxy**
+- Host the HTML on a web server
+- Create a backend endpoint (Node.js, Python, etc.) to proxy API requests
+- Avoids CORS restrictions
+
+**Option 3: Dedicated Server**
+- Deploy on a VM or container
+- Use a task scheduler (cron, Windows Task Scheduler) to run checks
+- Ideal for on-premises deployments
+
+**Key Features for Production:**
+- ✅ Automatic retry on API failures (every 5 minutes)
+- ✅ Persistent state tracking (uses localStorage)
+- ✅ Duplicate alert prevention
+- ✅ Professional Teams message formatting
+- ✅ Alert history logging
+
 ## 🎨 Visual Indicators
 
 ### NBA Service
@@ -126,7 +163,12 @@ https://prod.origin.api.stats.com/v1/stats/basketball/cbk/standings
 
 ## 📸 Screenshots
 
-### Main Dashboard
+### NBA Playoff Clinch Alert Service
+![NBA Service Initial State](https://github.com/user-attachments/assets/b5778827-da46-4747-bdc4-d5ebf919497b)
+
+![NBA Service Running](https://github.com/user-attachments/assets/76515dd6-69eb-41fc-8e3b-1fabf68d967d)
+
+### College Basketball Dashboard
 ![Dashboard UI](https://github.com/user-attachments/assets/d5ffa251-d2f2-4ef6-a6cd-3c73b5080e12)
 
 ### Demo with Clinching
