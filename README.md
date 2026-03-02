@@ -1,8 +1,8 @@
-# College Basketball Conference Clinching Dashboard
+# Basketball Analytics Dashboards
 
 <img src="https://octodex.github.com/images/Professortocat_v2.png" align="right" height="200px" />
 
-A real-time dashboard that displays NCAA Division I Basketball conference standings with automatic clinching detection and highlighting.
+Real-time dashboards and services for basketball standings, clinching detection, and automated alerts.
 
 ## 🏀 Features
 
@@ -13,13 +13,38 @@ A real-time dashboard that displays NCAA Division I Basketball conference standi
 - **Auto-Refresh** - Updates standings every 5 minutes
 - **Responsive Design** - Works on desktop and mobile devices
 
-## 📊 Dashboard Files
+## 📊 Available Services
 
+### NBA Playoff Clinch Alert Service
+- **`nba-playoff-alerts.html`** - Production-lean MVP service that monitors NBA standings and posts real-time playoff clinch alerts to Microsoft Teams
+  - **Features:**
+    - Real-time NBA standings from Stats Perform API
+    - Automatic playoff clinching detection (top 10 teams per conference)
+    - Microsoft Teams webhook integration
+    - Alert history tracking
+    - Auto-refresh every 5 minutes
+    - Test webhook functionality
+
+### College Basketball Conference Dashboard
 - **`index.html`** - Main dashboard that fetches live data from the API
 - **`demo.html`** - Demo version with mock data to showcase the clinching logic
 
 ## 🎯 Clinching Logic
 
+### NBA Playoff Clinching
+A team **clinches a playoff spot** when:
+1. They are ranked in the top 10 of their conference (Eastern or Western)
+2. Their current overall wins exceed the maximum possible wins of the team in 11th place
+
+The maximum possible wins for the 11th place team = current wins + remaining games (82 total games in NBA regular season)
+
+**Microsoft Teams Integration:**
+- When a team clinches, an automated alert is sent to the configured Teams channel
+- Alerts include team name, conference, rank, and record information
+- Uses Microsoft Teams MessageCard format with adaptive card styling
+- Prevents duplicate alerts by tracking previously clinched teams
+
+### College Basketball Conference Clinching
 A team **clinches their conference** when:
 1. They are in first place (most conference wins)
 2. Their current conference wins exceed the maximum possible wins of the second-place team
@@ -51,7 +76,19 @@ The dashboard includes all 31 NCAA Division I conferences with their specific co
 
 ## 🚀 Usage
 
-### View the Dashboard
+### NBA Playoff Alerts Service
+
+1. **Open the Service**: Open `nba-playoff-alerts.html` in a web browser
+2. **Configure Teams Webhook**:
+   - Go to your Microsoft Teams channel
+   - Click on the three dots (•••) > Connectors > Incoming Webhook
+   - Configure a new webhook and copy the URL
+   - Paste the webhook URL into the service and click "Save Configuration"
+3. **Test the Integration**: Click "Test Webhook" to verify the connection
+4. **Start Monitoring**: Click "Start Monitoring" to begin watching for playoff clinches
+5. **Automatic Alerts**: When a team clinches a playoff spot, the service automatically sends a formatted alert to your Teams channel
+
+### College Basketball Dashboard
 
 Simply open `index.html` in a web browser. The dashboard will:
 1. Automatically fetch the latest standings data
@@ -64,13 +101,26 @@ Open `demo.html` to see the dashboard with mock data demonstrating the clinching
 
 ## 🔗 API Integration
 
-Data is fetched from the Stats Perform API:
+### NBA Playoff Alerts
+Data is fetched from the Stats Perform NBA API:
+```
+https://prod.origin.api.stats.com/v1/stats/basketball/nba/standings
+```
+
+### College Basketball Dashboard
+Data is fetched from the Stats Perform CBK API:
 ```
 https://prod.origin.api.stats.com/v1/stats/basketball/cbk/standings
 ```
 
 ## 🎨 Visual Indicators
 
+### NBA Service
+- **Green Background** - Team has clinched a playoff spot
+- **Alert Log** - Shows history of all playoff clinch alerts sent to Teams
+- **Status Indicator** - Shows if the monitoring service is running or stopped
+
+### College Basketball Dashboard
 - **Green Background** - Team has clinched their conference
 - **Games Back** - Shows how many games behind the leader each team is
 
