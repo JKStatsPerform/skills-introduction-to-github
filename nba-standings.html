@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Standings Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1d428a;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .last-checked {
+            color: #666;
+            font-size: 1em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .legend {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-playoff {
+            background-color: #28a745;
+        }
+
+        .legend-division {
+            background-color: #007bff;
+        }
+
+        .legend-eliminated {
+            background-color: #dc3545;
+        }
+
+        .email-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .email-section h2 {
+            color: #1d428a;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .email-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .email-input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+
+        .email-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .email-tag {
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .email-tag button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 0.8em;
+            line-height: 1;
+        }
+
+        .conference-section {
+            margin-bottom: 40px;
+        }
+
+        .conference-header {
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .division-section {
+            margin-bottom: 20px;
+        }
+
+        .division-header {
+            background-color: #495057;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .standings-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .standings-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .standings-table tr:hover {
+            opacity: 0.9;
+        }
+
+        .playoff-clinched {
+            background-color: #28a745 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .division-clinched {
+            background-color: #007bff !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .eliminated {
+            background-color: #dc3545 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .team-rank {
+            font-weight: bold;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .standings-table {
+                font-size: 0.9em;
+            }
+
+            .standings-table th,
+            .standings-table td {
+                padding: 8px 4px;
+            }
+
+            .legend {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 NBA Standings Dashboard</h1>
+            <div class="last-checked" id="lastChecked">Loading...</div>
+        </header>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box legend-playoff"></div>
+                <span>Clinched Playoff Berth</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-division"></div>
+                <span>Clinched Division</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-eliminated"></div>
+                <span>Eliminated from Playoffs</span>
+            </div>
+        </div>
+
+        <div class="email-section">
+            <h2>📧 Email Notification List</h2>
+            <div class="email-input-group">
+                <input type="email" id="emailInput" placeholder="Enter email address (e.g., sportsnews@stats.com)" />
+                <button class="btn" onclick="addEmail()">Add Email</button>
+            </div>
+            <div class="email-list" id="emailList"></div>
+        </div>
+
+        <div id="dashboard">
+            <div class="loading">Loading NBA Standings...</div>
+        </div>
+    </div>
+
+    <script>
+        const NBA_API_URL = 'https://prod.origin.api.stats.com/v1/stats/basketball/nba/standings';
+        const REFRESH_INTERVAL = 20 * 60 * 1000; // 20 minutes
+        const PLAYOFF_SPOTS = 10; // Top 10 teams per conference make playoffs
+        const TOTAL_NBA_GAMES = 82; // NBA regular season games
+
+        // Conference and Division structure
+        const CONFERENCES = {
+            'Eastern': ['Atlantic', 'Central', 'Southeast'],
+            'Western': ['Northwest', 'Pacific', 'Southwest']
+        };
+
+        let emailList = [];
+        let previousStandings = {};
+        let isFetching = false;
+        let refreshTimer = null;
+
+        // Initialize
+        function init() {
+            loadEmailList();
+            renderEmailList();
+            fetchStandings();
+            
+            // Set up auto-refresh
+            refreshTimer = setInterval(fetchStandings, REFRESH_INTERVAL);
+        }
+
+        // Email management
+        function loadEmailList() {
+            const saved = localStorage.getItem('nba_email_list');
+            if (saved) {
+                emailList = JSON.parse(saved);
+            } else {
+                emailList = ['sportsnews@stats.com']; // Default email
+                saveEmailList();
+            }
+        }
+
+        function saveEmailList() {
+            localStorage.setItem('nba_email_list', JSON.stringify(emailList));
+        }
+
+        function addEmail() {
+            const input = document.getElementById('emailInput');
+            const email = input.value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            if (emailList.includes(email)) {
+                alert('This email is already in the list');
+                return;
+            }
+            
+            emailList.push(email);
+            saveEmailList();
+            renderEmailList();
+            input.value = '';
+        }
+
+        function removeEmail(email) {
+            if (confirm(`Remove ${email} from the notification list?`)) {
+                emailList = emailList.filter(e => e !== email);
+                saveEmailList();
+                renderEmailList();
+            }
+        }
+
+        function renderEmailList() {
+            const listDiv = document.getElementById('emailList');
+            
+            if (emailList.length === 0) {
+                listDiv.innerHTML = '<p style="color: #666; font-style: italic;">No emails in the notification list</p>';
+                return;
+            }
+            
+            let html = '';
+            emailList.forEach(email => {
+                html += `
+                    <div class="email-tag">
+                        <span>${email}</span>
+                        <button onclick="removeEmail('${email}')" title="Remove">×</button>
+                    </div>
+                `;
+            });
+            
+            listDiv.innerHTML = html;
+        }
+
+        // Calculate team statistics
+        function calculateTeamStats(team, divisionTeams, conferenceTeams) {
+            const wins = parseInt(team.overallWins || 0);
+            const losses = parseInt(team.overallLosses || 0);
+            const gamesPlayed = wins + losses;
+            const gamesRemaining = TOTAL_NBA_GAMES - gamesPlayed;
+            
+            // Games Behind calculation (vs division leader)
+            const divisionLeader = divisionTeams[0];
+            const leaderWins = parseInt(divisionLeader.overallWins || 0);
+            const leaderLosses = parseInt(divisionLeader.overallLosses || 0);
+            const gamesBehind = ((leaderWins - wins) + (losses - leaderLosses)) / 2;
+            
+            // Magic Number (to clinch division)
+            let magicNumber = '-';
+            if (team === divisionLeader && divisionTeams.length > 1) {
+                const secondPlace = divisionTeams[1];
+                const secondWins = parseInt(secondPlace.overallWins || 0);
+                const secondLosses = parseInt(secondPlace.overallLosses || 0);
+                const secondGamesPlayed = secondWins + secondLosses;
+                const secondRemaining = TOTAL_NBA_GAMES - secondGamesPlayed;
+                const secondMaxWins = secondWins + secondRemaining;
+                magicNumber = Math.max(0, secondMaxWins - wins + 1);
+            }
+            
+            // Elimination Number (from playoffs)
+            const conferenceRank = parseInt(team.conferenceRank || 999);
+            let eliminationNumber = '-';
+            
+            if (conferenceRank > PLAYOFF_SPOTS) {
+                // Find the team in the last playoff spot
+                const playoffCutoff = conferenceTeams.find(t => parseInt(t.conferenceRank) === PLAYOFF_SPOTS);
+                if (playoffCutoff) {
+                    const cutoffWins = parseInt(playoffCutoff.overallWins || 0);
+                    const maxWins = wins + gamesRemaining;
+                    // Elimination number: cutoff team wins + this team losses = elimination
+                    // E# = (cutoff wins + 1) - max possible wins for this team
+                    eliminationNumber = Math.max(0, cutoffWins + 1 - maxWins);
+                }
+            }
+            
+            return {
+                gamesBehind: gamesBehind > 0 ? gamesBehind.toFixed(1) : '-',
+                magicNumber: magicNumber,
+                eliminationNumber: eliminationNumber
+            };
+        }
+
+        // Check if team clinched playoff spot
+        function hasTeamClinched(team, conferenceTeams) {
+            const rank = parseInt(team.conferenceRank || 999);
+            if (rank > PLAYOFF_SPOTS) {
+                return false;
+            }
+            
+            const sortedTeams = [...conferenceTeams].sort((a, b) => {
+                return parseInt(a.conferenceRank) - parseInt(b.conferenceRank);
+            });
+            
+            if (sortedTeams.length <= PLAYOFF_SPOTS) {
+                return true;
+            }
+            
+            const firstOutTeam = sortedTeams[PLAYOFF_SPOTS]; // 11th place
+            if (!firstOutTeam) {
+                return true;
+            }
+            
+            const teamWins = parseInt(team.overallWins || 0);
+            const outsideWins = parseInt(firstOutTeam.overallWins || 0);
+            const outsideLosses = parseInt(firstOutTeam.overallLosses || 0);
+            const outsideGamesPlayed = outsideWins + outsideLosses;
+            const outsideGamesRemaining = TOTAL_NBA_GAMES - outsideGamesPlayed;
+            const outsideMaxWins = outsideWins + outsideGamesRemaining;
+            
+            return teamWins > outsideMaxWins;
+        }
+
+        // Check if team clinched division
+        function hasTeamClinchedDivision(team, divisionTeams) {
+            if (divisionTeams[0] !== team) {
+                return false; // Must be division leader
+            }
+            
+            if (divisionTeams.length <= 1) {
+                return true;
+            }
+            
+            const teamWins = parseInt(team.overallWins || 0);
+            const secondPlace = divisionTeams[1];
+            const secondWins = parseInt(secondPlace.overallWins || 0);
+            const secondLosses = parseInt(secondPlace.overallLosses || 0);
+            const secondGamesPlayed = secondWins + secondLosses;
+            const secondRemaining = TOTAL_NBA_GAMES - secondGamesPlayed;
+            const secondMaxWins = secondWins + secondRemaining;
+            
+            return teamWins > secondMaxWins;
+        }
+
+        // Check if team is eliminated
+        function isTeamEliminated(team, conferenceTeams) {
+            const rank = parseInt(team.conferenceRank || 999);
+            
+            // If already in playoff spot, can't be eliminated
+            if (rank <= PLAYOFF_SPOTS) {
+                return false;
+            }
+            
+            const teamWins = parseInt(team.overallWins || 0);
+            const teamLosses = parseInt(team.overallLosses || 0);
+            const teamGamesPlayed = teamWins + teamLosses;
+            const teamRemaining = TOTAL_NBA_GAMES - teamGamesPlayed;
+            const teamMaxWins = teamWins + teamRemaining;
+            
+            // Find the team in the last playoff spot
+            const playoffCutoff = conferenceTeams.find(t => parseInt(t.conferenceRank) === PLAYOFF_SPOTS);
+            if (!playoffCutoff) {
+                return false;
+            }
+            
+            const cutoffWins = parseInt(playoffCutoff.overallWins || 0);
+            
+            // Team is eliminated if they can't catch the 10th place team
+            return teamMaxWins < cutoffWins;
+        }
+
+        // Send email notification
+        function sendEmailNotification(team, eventType, conference, division) {
+            // In a real application, this would make an API call to a backend service
+            // that sends emails. For demonstration, we'll log to console.
+            console.log('=== EMAIL NOTIFICATION ===');
+            console.log(`To: ${emailList.join(', ')}`);
+            console.log(`Subject: NBA Alert - ${team.teamName} ${eventType}`);
+            console.log(`Team: ${team.teamName}`);
+            console.log(`Conference: ${conference}`);
+            console.log(`Division: ${division}`);
+            console.log(`Event: ${eventType}`);
+            console.log(`Record: ${team.overallWins}-${team.overallLosses}`);
+            console.log(`Timestamp: ${new Date().toLocaleString()}`);
+            console.log('========================');
+            
+            // Store notification in localStorage for demo purposes
+            const notifications = JSON.parse(localStorage.getItem('nba_notifications') || '[]');
+            notifications.unshift({
+                team: team.teamName,
+                event: eventType,
+                conference: conference,
+                division: division,
+                record: `${team.overallWins}-${team.overallLosses}`,
+                timestamp: new Date().toISOString(),
+                recipients: [...emailList]
+            });
+            
+            // Keep only last 50 notifications
+            if (notifications.length > 50) {
+                notifications.length = 50;
+            }
+            
+            localStorage.setItem('nba_notifications', JSON.stringify(notifications));
+        }
+
+        // Render standings for a conference
+        function renderConferenceStandings(conferenceName, allTeams) {
+            const conferenceTeams = allTeams.filter(t => t.conferenceName === conferenceName)
+                .sort((a, b) => parseInt(a.conferenceRank) - parseInt(b.conferenceRank));
+            
+            let html = `<div class="conference-section">
+                <div class="conference-header">${conferenceName} Conference</div>`;
+            
+            const divisions = CONFERENCES[conferenceName];
+            
+            divisions.forEach(divisionName => {
+                const divisionTeams = conferenceTeams.filter(t => t.divisionName === divisionName)
+                    .sort((a, b) => {
+                        // Sort by wins (descending), then losses (ascending)
+                        const winsA = parseInt(a.overallWins || 0);
+                        const winsB = parseInt(b.overallWins || 0);
+                        if (winsB !== winsA) return winsB - winsA;
+                        const lossesA = parseInt(a.overallLosses || 0);
+                        const lossesB = parseInt(b.overallLosses || 0);
+                        return lossesA - lossesB;
+                    });
+                
+                if (divisionTeams.length === 0) return;
+                
+                html += `
+                    <div class="division-section">
+                        <div class="division-header">${divisionName} Division</div>
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th>Conf Rank</th>
+                                    <th>Team</th>
+                                    <th>W</th>
+                                    <th>L</th>
+                                    <th>GB</th>
+                                    <th>Magic #</th>
+                                    <th>Elim #</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                divisionTeams.forEach(team => {
+                    const stats = calculateTeamStats(team, divisionTeams, conferenceTeams);
+                    const clinched = hasTeamClinched(team, conferenceTeams);
+                    const divisionClinched = hasTeamClinchedDivision(team, divisionTeams);
+                    const eliminated = isTeamEliminated(team, conferenceTeams);
+                    
+                    let rowClass = '';
+                    if (divisionClinched) {
+                        rowClass = 'division-clinched';
+                    } else if (clinched) {
+                        rowClass = 'playoff-clinched';
+                    } else if (eliminated) {
+                        rowClass = 'eliminated';
+                    }
+                    
+                    // Check for status changes and send notifications
+                    const teamKey = `${team.teamId}`;
+                    const previousStatus = previousStandings[teamKey] || {};
+                    
+                    if (clinched && !previousStatus.clinched) {
+                        sendEmailNotification(team, 'Clinched Playoff Berth', conferenceName, divisionName);
+                    }
+                    if (divisionClinched && !previousStatus.divisionClinched) {
+                        sendEmailNotification(team, 'Clinched Division', conferenceName, divisionName);
+                    }
+                    if (eliminated && !previousStatus.eliminated) {
+                        sendEmailNotification(team, 'Eliminated from Playoffs', conferenceName, divisionName);
+                    }
+                    
+                    // Update previous status
+                    previousStandings[teamKey] = {
+                        clinched: clinched,
+                        divisionClinched: divisionClinched,
+                        eliminated: eliminated
+                    };
+                    
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="team-rank">${team.conferenceRank || '-'}</td>
+                            <td>${team.teamName || 'Unknown'}</td>
+                            <td>${team.overallWins || 0}</td>
+                            <td>${team.overallLosses || 0}</td>
+                            <td>${stats.gamesBehind}</td>
+                            <td>${stats.magicNumber}</td>
+                            <td>${stats.eliminationNumber}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Fetch standings from API
+        async function fetchStandings() {
+            if (isFetching) {
+                console.log('Already fetching, skipping...');
+                return;
+            }
+            
+            isFetching = true;
+            const dashboardDiv = document.getElementById('dashboard');
+            
+            try {
+                const response = await fetch(NBA_API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract all teams
+                const allTeams = [];
+                if (data.conferences) {
+                    data.conferences.forEach(conf => {
+                        if (conf.teams) {
+                            conf.teams.forEach(team => {
+                                team.conferenceName = conf.conferenceName;
+                                allTeams.push(team);
+                            });
+                        }
+                    });
+                }
+                
+                // Render standings
+                let html = '';
+                html += renderConferenceStandings('Eastern', allTeams);
+                html += renderConferenceStandings('Western', allTeams);
+                
+                dashboardDiv.innerHTML = html;
+                
+                // Update last checked time
+                const now = new Date();
+                document.getElementById('lastChecked').textContent = 
+                    `Last Checked: ${now.toLocaleString()}`;
+                
+            } catch (error) {
+                console.error('Error fetching standings:', error);
+                dashboardDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading standings:</strong> ${error.message}
+                        <br>
+                        <small>The dashboard will retry in 20 minutes.</small>
+                    </div>
+                `;
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
