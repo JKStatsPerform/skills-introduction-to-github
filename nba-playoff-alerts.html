@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Playoff Clinch Alert Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1d428a;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .config-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h2 {
+            color: #1d428a;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .input-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-section {
+            margin-bottom: 30px;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .status-running {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-stopped {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .conference-section {
+            margin-bottom: 30px;
+        }
+
+        .conference-header {
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .standings-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .standings-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .standings-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .playoff-clinched {
+            background-color: #28a745 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .playoff-clinched:hover {
+            background-color: #218838 !important;
+        }
+
+        .team-rank {
+            font-weight: bold;
+            color: #1d428a;
+        }
+
+        .alert-log {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-log h3 {
+            margin-bottom: 10px;
+            color: #1d428a;
+        }
+
+        .alert-item {
+            padding: 10px;
+            border-left: 4px solid #28a745;
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .alert-item .time {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .alert-item .message {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .legend {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-clinched {
+            background-color: #28a745;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .standings-table {
+                font-size: 0.9em;
+            }
+
+            .standings-table th,
+            .standings-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 NBA Playoff Clinch Alert Service</h1>
+            <p class="subtitle">Real-time Playoff Clinching Detection with Microsoft Teams Integration</p>
+        </header>
+
+        <div class="config-section">
+            <h2>⚙️ Microsoft Teams Configuration</h2>
+            <div class="input-group">
+                <label for="webhookUrl">Teams Webhook URL</label>
+                <input type="text" id="webhookUrl" placeholder="https://your-org.webhook.office.com/webhookb2/..." />
+                <small>Enter your Microsoft Teams Incoming Webhook URL. Get it from Teams > Channel > Connectors > Incoming Webhook.</small>
+            </div>
+            <button class="btn" id="saveConfigBtn" onclick="saveConfiguration()">Save Configuration</button>
+            <button class="btn" id="testWebhookBtn" onclick="testWebhook()" style="margin-left: 10px;">Test Webhook</button>
+        </div>
+
+        <div class="status-section">
+            <div id="statusBox" class="status-box status-stopped">
+                <strong>Status:</strong> <span id="statusText">Service Stopped</span>
+            </div>
+            <button class="btn" id="startStopBtn" onclick="toggleService()">Start Monitoring</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box legend-clinched"></div>
+                <span>Playoff Spot Clinched</span>
+            </div>
+        </div>
+
+        <div id="dashboard">
+            <p style="text-align: center; padding: 20px; color: #666;">Configure webhook and start monitoring to see standings...</p>
+        </div>
+
+        <div class="alert-log">
+            <h3>📢 Alert History</h3>
+            <div id="alertLog">
+                <p style="color: #666; font-style: italic;">No alerts sent yet</p>
+            </div>
+        </div>
+
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        const NBA_API_URL = 'https://prod.origin.api.stats.com/v1/stats/basketball/nba/standings';
+        const PLAYOFF_SPOTS = 10; // Top 10 teams per conference make playoffs (including play-in)
+        
+        let isRunning = false;
+        let isFetching = false;
+        let monitoringInterval = null;
+        let webhookUrl = '';
+        let clinchedTeams = new Set(); // Track teams that have already clinched
+        let alertHistory = [];
+
+        // Load saved configuration
+        function loadConfiguration() {
+            const savedWebhook = localStorage.getItem('nba_teams_webhook');
+            const savedClinched = localStorage.getItem('nba_clinched_teams');
+            const savedAlerts = localStorage.getItem('nba_alert_history');
+            
+            if (savedWebhook) {
+                webhookUrl = savedWebhook;
+                document.getElementById('webhookUrl').value = savedWebhook;
+            }
+            
+            if (savedClinched) {
+                clinchedTeams = new Set(JSON.parse(savedClinched));
+            }
+            
+            if (savedAlerts) {
+                alertHistory = JSON.parse(savedAlerts);
+                renderAlertHistory();
+            }
+        }
+
+        // Save configuration
+        function saveConfiguration() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            if (!url) {
+                alert('Please enter a webhook URL');
+                return;
+            }
+            
+            if (!url.includes('webhook.office.com')) {
+                alert('Invalid Teams webhook URL. It should contain "webhook.office.com"');
+                return;
+            }
+            
+            webhookUrl = url;
+            localStorage.setItem('nba_teams_webhook', url);
+            alert('Configuration saved successfully!');
+        }
+
+        // Test webhook
+        async function testWebhook() {
+            if (!webhookUrl) {
+                alert('Please save webhook configuration first');
+                return;
+            }
+            
+            const testMessage = {
+                "@type": "MessageCard",
+                "@context": "https://schema.org/extensions",
+                "themeColor": "1d428a",
+                "title": "🏀 Test Alert - NBA Playoff Clinch Service",
+                "text": "This is a test message from the NBA Playoff Clinch Alert Service. Your webhook is configured correctly!",
+                "sections": [{
+                    "facts": [
+                        {
+                            "name": "Service:",
+                            "value": "NBA Playoff Clinch Alerts"
+                        },
+                        {
+                            "name": "Status:",
+                            "value": "Webhook Test Successful"
+                        },
+                        {
+                            "name": "Time:",
+                            "value": new Date().toLocaleString()
+                        }
+                    ]
+                }]
+            };
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testMessage)
+                });
+                
+                if (response.ok) {
+                    alert('Test message sent successfully! Check your Teams channel.');
+                } else {
+                    alert(`Failed to send test message. Status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error sending test message:', error);
+                alert('Error sending test message: ' + error.message);
+            }
+        }
+
+        // Send Teams notification
+        async function sendTeamsNotification(team, conference) {
+            if (!webhookUrl) {
+                console.log('No webhook configured, skipping notification');
+                return false;
+            }
+            
+            const message = {
+                "@type": "MessageCard",
+                "@context": "https://schema.org/extensions",
+                "themeColor": "28a745",
+                "title": "🎉 NBA PLAYOFF SPOT CLINCHED!",
+                "summary": `${team.teamName} clinches playoff spot`,
+                "sections": [{
+                    "activityTitle": `**${team.teamName}** has clinched a playoff spot!`,
+                    "activitySubtitle": `${conference} Conference`,
+                    "facts": [
+                        {
+                            "name": "Conference Rank:",
+                            "value": `#${team.conferenceRank}`
+                        },
+                        {
+                            "name": "Overall Record:",
+                            "value": `${team.overallWins}-${team.overallLosses}`
+                        },
+                        {
+                            "name": "Conference Record:",
+                            "value": `${team.conferenceWins}-${team.conferenceLosses}`
+                        },
+                        {
+                            "name": "Clinched At:",
+                            "value": new Date().toLocaleString()
+                        }
+                    ],
+                    "text": `🏆 Congratulations to ${team.teamName} on securing their playoff berth!`
+                }]
+            };
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(message)
+                });
+                
+                if (response.ok) {
+                    console.log(`Successfully sent Teams notification for ${team.teamName}`);
+                    addToAlertHistory(team, conference);
+                    return true;
+                } else {
+                    console.error(`Failed to send Teams notification. Status: ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error sending Teams notification:', error);
+                return false;
+            }
+        }
+
+        // Add alert to history
+        function addToAlertHistory(team, conference) {
+            const alert = {
+                team: team.teamName,
+                conference: conference,
+                time: new Date().toISOString(),
+                record: `${team.overallWins}-${team.overallLosses}`
+            };
+            
+            alertHistory.unshift(alert); // Add to beginning
+            
+            // Keep only last 50 alerts
+            if (alertHistory.length > 50) {
+                alertHistory = alertHistory.slice(0, 50);
+            }
+            
+            localStorage.setItem('nba_alert_history', JSON.stringify(alertHistory));
+            renderAlertHistory();
+        }
+
+        // Render alert history
+        function renderAlertHistory() {
+            const logDiv = document.getElementById('alertLog');
+            
+            if (alertHistory.length === 0) {
+                logDiv.innerHTML = '<p style="color: #666; font-style: italic;">No alerts sent yet</p>';
+                return;
+            }
+            
+            let html = '';
+            alertHistory.forEach(alert => {
+                const time = new Date(alert.time).toLocaleString();
+                html += `
+                    <div class="alert-item">
+                        <div class="time">${time}</div>
+                        <div class="message">
+                            🎉 <strong>${alert.team}</strong> (${alert.conference}) clinched playoff spot - Record: ${alert.record}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            logDiv.innerHTML = html;
+        }
+
+        // Check if team has clinched playoff spot
+        function hasTeamClinched(team, teams, conference) {
+            // Must be in top PLAYOFF_SPOTS positions
+            const rank = parseInt(team.conferenceRank || 999);
+            if (rank > PLAYOFF_SPOTS) {
+                return false;
+            }
+            
+            // Get all conference teams sorted by rank
+            const conferenceTeams = teams
+                .filter(t => t.conferenceName === conference)
+                .sort((a, b) => {
+                    const rankA = parseInt(a.conferenceRank || 999);
+                    const rankB = parseInt(b.conferenceRank || 999);
+                    return rankA - rankB;
+                });
+            
+            // If there are PLAYOFF_SPOTS or fewer teams, they all clinch
+            if (conferenceTeams.length <= PLAYOFF_SPOTS) {
+                return true;
+            }
+            
+            // Get the team just outside playoff spots
+            const firstOutTeam = conferenceTeams[PLAYOFF_SPOTS]; // 11th place (0-indexed, so index 10)
+            
+            if (!firstOutTeam) {
+                return true; // No team in 11th place means top teams have clinched
+            }
+            
+            const teamWins = parseInt(team.overallWins || 0);
+            const teamLosses = parseInt(team.overallLosses || 0);
+            const outsideWins = parseInt(firstOutTeam.overallWins || 0);
+            const outsideLosses = parseInt(firstOutTeam.overallLosses || 0);
+            
+            // NBA regular season is 82 games
+            const TOTAL_GAMES = 82;
+            const outsideGamesPlayed = outsideWins + outsideLosses;
+            const outsideGamesRemaining = TOTAL_GAMES - outsideGamesPlayed;
+            const outsideMaxWins = outsideWins + outsideGamesRemaining;
+            
+            // Team clinches if their current wins exceed the maximum possible wins
+            // of the team just outside playoff spots
+            return teamWins > outsideMaxWins;
+        }
+
+        // Render conference standings
+        function renderConferenceStandings(conferenceName, teams) {
+            const conferenceTeams = teams
+                .filter(t => t.conferenceName === conferenceName)
+                .sort((a, b) => {
+                    const rankA = parseInt(a.conferenceRank || 999);
+                    const rankB = parseInt(b.conferenceRank || 999);
+                    return rankA - rankB;
+                });
+
+            let html = `
+                <div class="conference-section">
+                    <div class="conference-header">${conferenceName} Conference</div>
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Overall Record</th>
+                                <th>Conference Record</th>
+                                <th>Win %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            conferenceTeams.forEach((team) => {
+                const hasClinched = hasTeamClinched(team, teams, conferenceName);
+                const clinchClass = hasClinched ? 'playoff-clinched' : '';
+                const overallRecord = `${team.overallWins || 0}-${team.overallLosses || 0}`;
+                const confRecord = `${team.conferenceWins || 0}-${team.conferenceLosses || 0}`;
+                const winPct = team.overallWins && (team.overallWins + team.overallLosses) > 0
+                    ? ((team.overallWins / (team.overallWins + team.overallLosses)) * 100).toFixed(1) + '%'
+                    : '0.0%';
+                
+                html += `
+                    <tr class="${clinchClass}">
+                        <td class="team-rank">${team.conferenceRank || '-'}</td>
+                        <td>${team.teamName || 'Unknown'}</td>
+                        <td>${overallRecord}</td>
+                        <td>${confRecord}</td>
+                        <td>${winPct}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Fetch and check standings
+        async function fetchStandings() {
+            if (isFetching) {
+                console.log('Already fetching data, skipping...');
+                return;
+            }
+
+            isFetching = true;
+            const dashboardDiv = document.getElementById('dashboard');
+
+            try {
+                const response = await fetch(NBA_API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                let html = '';
+                let newClinches = [];
+                
+                // Extract all teams
+                const allTeams = [];
+                if (data.conferences) {
+                    data.conferences.forEach(conf => {
+                        if (conf.teams) {
+                            conf.teams.forEach(team => {
+                                team.conferenceName = conf.conferenceName;
+                                allTeams.push(team);
+                            });
+                        }
+                    });
+                }
+
+                // Check for new clinches
+                if (isRunning) {
+                    allTeams.forEach(team => {
+                        const teamKey = `${team.conferenceName}-${team.teamId}`;
+                        if (hasTeamClinched(team, allTeams, team.conferenceName) && !clinchedTeams.has(teamKey)) {
+                            newClinches.push({ team, conference: team.conferenceName });
+                            clinchedTeams.add(teamKey);
+                        }
+                    });
+                    
+                    // Save clinched teams
+                    localStorage.setItem('nba_clinched_teams', JSON.stringify([...clinchedTeams]));
+                }
+
+                // Render standings
+                const conferences = ['Eastern', 'Western'];
+                conferences.forEach(conf => {
+                    html += renderConferenceStandings(conf, allTeams);
+                });
+
+                dashboardDiv.innerHTML = html;
+
+                // Send notifications for new clinches
+                if (newClinches.length > 0 && isRunning) {
+                    for (const { team, conference } of newClinches) {
+                        await sendTeamsNotification(team, conference);
+                        // Small delay between notifications
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
+                // Update last updated time
+                const now = new Date();
+                document.getElementById('lastUpdated').textContent = 
+                    `Last updated: ${now.toLocaleString()}`;
+
+            } catch (error) {
+                console.error('Error fetching standings:', error);
+                dashboardDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading standings:</strong> ${error.message}
+                        <br>
+                        <small>The service will retry in 5 minutes.</small>
+                    </div>
+                `;
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        // Toggle service on/off
+        function toggleService() {
+            if (!webhookUrl) {
+                alert('Please configure and save the Teams webhook URL first');
+                return;
+            }
+            
+            if (isRunning) {
+                stopService();
+            } else {
+                startService();
+            }
+        }
+
+        // Start monitoring service
+        function startService() {
+            isRunning = true;
+            
+            // Update UI
+            document.getElementById('statusBox').className = 'status-box status-running';
+            document.getElementById('statusText').textContent = 'Service Running - Monitoring every 5 minutes';
+            document.getElementById('startStopBtn').textContent = 'Stop Monitoring';
+            
+            // Initial fetch
+            fetchStandings();
+            
+            // Set up interval (check every 5 minutes)
+            monitoringInterval = setInterval(fetchStandings, 5 * 60 * 1000);
+            
+            console.log('NBA Playoff Clinch Alert Service started');
+        }
+
+        // Stop monitoring service
+        function stopService() {
+            isRunning = false;
+            
+            // Clear interval
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+            
+            // Update UI
+            document.getElementById('statusBox').className = 'status-box status-stopped';
+            document.getElementById('statusText').textContent = 'Service Stopped';
+            document.getElementById('startStopBtn').textContent = 'Start Monitoring';
+            
+            console.log('NBA Playoff Clinch Alert Service stopped');
+        }
+
+        // Initialize on page load
+        loadConfiguration();
+    </script>
+</body>
+</html>
