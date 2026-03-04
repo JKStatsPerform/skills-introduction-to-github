@@ -429,11 +429,39 @@
 
     <script>
         const INJURIES_API_URL = 'https://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/injuries';
+        // Public CORS proxy used as a fallback when the direct request is blocked
+        const CORS_PROXY = 'https://corsproxy.io/?url=';
         const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
         let allInjuries = [];
         let isFetching = false;
         let refreshTimer = null;
+
+        // Attempt a fetch directly, then via CORS proxy if the first call is blocked.
+        // Note: the CORS proxy (corsproxy.io) is a public, free-tier service used only
+        // when the direct request is rejected at the network level. The ESPN injuries
+        // endpoint is public, unauthenticated data, so routing it through the proxy
+        // carries no meaningful privacy risk.
+        async function fetchWithFallback(url) {
+            // 1. Try the direct URL first (works for most users in a normal browser)
+            try {
+                const res = await fetch(url);
+                if (res.ok) return res;
+                // Non-2xx from the server – a proxy won't help, fail immediately
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            } catch (directErr) {
+                // TypeError = network-level failure (CORS, ad-blocker, no connectivity)
+                // Re-throw anything else (e.g. the HTTP error we just raised above)
+                if (!(directErr instanceof TypeError)) throw directErr;
+                console.warn('Direct fetch blocked, retrying via CORS proxy…');
+            }
+
+            // 2. Fallback: route through corsproxy.io
+            const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
+            const res = await fetch(proxiedUrl);
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            return res;
+        }
 
         // Fetch injury data from ESPN API
         async function fetchInjuries() {
@@ -445,10 +473,7 @@
             btn.textContent = '⏳ Loading…';
 
             try {
-                const response = await fetch(INJURIES_API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                const response = await fetchWithFallback(INJURIES_API_URL);
                 const data = await response.json();
                 allInjuries = parseInjuries(data);
                 applyFilters();
@@ -462,7 +487,8 @@
                 document.getElementById('dashboard').innerHTML = `
                     <div class="error">
                         ⚠️ Failed to load injury data: ${escapeHtml(err.message)}<br>
-                        <small>Please check your internet connection and try again.</small>
+                        <small>Both the direct request and the CORS proxy failed.
+                        Please check your internet connection and try again.</small>
                     </div>`;
             } finally {
                 isFetching = false;
