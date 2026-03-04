@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Injury News Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1d428a;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1d428a 0%, #c8102e 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+            background: white;
+        }
+
+        .summary-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            flex: 1;
+            min-width: 120px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border-top: 4px solid #1d428a;
+        }
+
+        .summary-card .count {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1d428a;
+        }
+
+        .summary-card .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .summary-card.out { border-top-color: #dc3545; }
+        .summary-card.out .count { color: #dc3545; }
+
+        .summary-card.day-to-day { border-top-color: #fd7e14; }
+        .summary-card.day-to-day .count { color: #fd7e14; }
+
+        .summary-card.questionable { border-top-color: #ffc107; }
+        .summary-card.questionable .count { color: #856404; }
+
+        .summary-card.probable { border-top-color: #28a745; }
+        .summary-card.probable .count { color: #28a745; }
+
+        .injury-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .injury-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.2s;
+        }
+
+        .injury-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            gap: 12px;
+        }
+
+        .player-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+            background: #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-name {
+            font-weight: 700;
+            font-size: 1.05em;
+            color: #1d428a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-meta {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .team-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            padding: 14px 16px;
+        }
+
+        .injury-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .injury-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .injury-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            width: 70px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .injury-value {
+            font-size: 0.92em;
+            color: #333;
+            flex: 1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.82em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-out {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-day-to-day {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .status-questionable {
+            background-color: #fff3cd;
+            color: #664d03;
+            border: 1px solid #ffecb5;
+        }
+
+        .status-probable {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-default {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #dee2e6;
+            border-top-color: #1d428a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+            grid-column: 1 / -1;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        .auto-refresh-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .injury-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-bar {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 NBA Injury News Dashboard</h1>
+            <p class="subtitle">Latest NBA player injury updates, ordered by player name</p>
+        </header>
+
+        <div class="auto-refresh-info" id="autoRefreshInfo">
+            ⏱️ Auto-refreshes every 5 minutes. Last refreshed: <span id="refreshTime">—</span>
+        </div>
+
+        <div class="controls">
+            <div class="search-group">
+                <input type="text" id="searchInput" placeholder="Search by player or team..." oninput="applyFilters()" />
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">All</option>
+                    <option value="Out">Out</option>
+                    <option value="Day-To-Day">Day-To-Day</option>
+                    <option value="Questionable">Questionable</option>
+                    <option value="Probable">Probable</option>
+                </select>
+            </div>
+            <button class="btn" id="refreshBtn" onclick="fetchInjuries()">🔄 Refresh</button>
+        </div>
+
+        <div class="summary-bar" id="summaryBar" style="display:none;">
+            <div class="summary-card out">
+                <div class="count" id="countOut">0</div>
+                <div class="label">Out</div>
+            </div>
+            <div class="summary-card day-to-day">
+                <div class="count" id="countDTD">0</div>
+                <div class="label">Day-To-Day</div>
+            </div>
+            <div class="summary-card questionable">
+                <div class="count" id="countQ">0</div>
+                <div class="label">Questionable</div>
+            </div>
+            <div class="summary-card probable">
+                <div class="count" id="countP">0</div>
+                <div class="label">Probable</div>
+            </div>
+            <div class="summary-card">
+                <div class="count" id="countTotal">0</div>
+                <div class="label">Total Injuries</div>
+            </div>
+        </div>
+
+        <div id="dashboard">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading injury data…</div>
+            </div>
+        </div>
+
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        const INJURIES_API_URL = 'https://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/injuries';
+        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+        let allInjuries = [];
+        let isFetching = false;
+        let refreshTimer = null;
+
+        // Fetch injury data from ESPN API
+        async function fetchInjuries() {
+            if (isFetching) return;
+            isFetching = true;
+
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading…';
+
+            try {
+                const response = await fetch(INJURIES_API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                allInjuries = parseInjuries(data);
+                applyFilters();
+                updateSummary(allInjuries);
+                document.getElementById('summaryBar').style.display = 'flex';
+                const now = new Date();
+                document.getElementById('lastUpdated').textContent = `Last updated: ${now.toLocaleString()}`;
+                document.getElementById('refreshTime').textContent = now.toLocaleTimeString();
+            } catch (err) {
+                console.error('Error fetching injuries:', err);
+                document.getElementById('dashboard').innerHTML = `
+                    <div class="error">
+                        ⚠️ Failed to load injury data: ${escapeHtml(err.message)}<br>
+                        <small>Please check your internet connection and try again.</small>
+                    </div>`;
+            } finally {
+                isFetching = false;
+                btn.disabled = false;
+                btn.textContent = '🔄 Refresh';
+            }
+        }
+
+        // Parse the ESPN injuries API response into a flat, sorted list
+        function parseInjuries(data) {
+            const injuries = [];
+
+            const teams = Array.isArray(data.injuries) ? data.injuries : [];
+            teams.forEach(teamEntry => {
+                const team = teamEntry.team || {};
+                const teamName = team.displayName || team.name || '';
+                const teamAbbr = team.abbreviation || '';
+                const teamLogoUrl = (team.logos && team.logos[0]) ? team.logos[0].href : '';
+
+                const players = Array.isArray(teamEntry.injuries) ? teamEntry.injuries : [];
+                players.forEach(injury => {
+                    const athlete = injury.athlete || {};
+                    const status = injury.status || '';
+                    const type = (injury.type && injury.type.description) || injury.type || '';
+                    const detail = injury.details || {};
+                    const description = detail.shortComment || detail.longComment || injury.longComment || injury.shortComment || '';
+                    const injuryType = detail.type || type || '';
+                    const returnDate = detail.returnDate || '';
+                    const date = injury.date || '';
+
+                    injuries.push({
+                        displayName: athlete.displayName || athlete.fullName || 'Unknown',
+                        firstName: athlete.firstName || '',
+                        lastName: athlete.lastName || '',
+                        position: (athlete.position && athlete.position.abbreviation) || '',
+                        photoUrl: (athlete.headshot && athlete.headshot.href) || '',
+                        teamName,
+                        teamAbbr,
+                        teamLogoUrl,
+                        status,
+                        injuryType,
+                        description,
+                        returnDate,
+                        date,
+                    });
+                });
+            });
+
+            // Sort alphabetically by displayName
+            injuries.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+            return injuries;
+        }
+
+        // Apply search and status filters, then re-render
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+
+            const filtered = allInjuries.filter(inj => {
+                const matchesSearch = !search ||
+                    inj.displayName.toLowerCase().includes(search) ||
+                    inj.teamName.toLowerCase().includes(search) ||
+                    inj.teamAbbr.toLowerCase().includes(search);
+
+                const matchesStatus = !statusFilter ||
+                    inj.status.toLowerCase().includes(statusFilter);
+
+                return matchesSearch && matchesStatus;
+            });
+
+            renderInjuries(filtered);
+        }
+
+        // Render injury cards
+        function renderInjuries(injuries) {
+            const dashboard = document.getElementById('dashboard');
+
+            if (injuries.length === 0) {
+                dashboard.innerHTML = '<div class="injury-grid"><div class="no-results">No injury reports found matching your criteria.</div></div>';
+                return;
+            }
+
+            const cards = injuries.map(inj => buildCard(inj)).join('');
+            dashboard.innerHTML = `<div class="injury-grid">${cards}</div>`;
+        }
+
+        // Build HTML for a single injury card
+        function buildCard(inj) {
+            const statusClass = getStatusClass(inj.status);
+            const statusLabel = escapeHtml(inj.status || 'Unknown');
+            const playerName = escapeHtml(inj.displayName);
+            const teamName = escapeHtml(inj.teamName);
+            const position = inj.position ? `<span>${escapeHtml(inj.position)}</span> · ` : '';
+            const photoSrc = inj.photoUrl ? escapeHtml(inj.photoUrl) : '';
+            const teamLogoSrc = inj.teamLogoUrl ? escapeHtml(inj.teamLogoUrl) : '';
+
+            const photoImg = photoSrc
+                ? `<img class="player-avatar" src="${photoSrc}" alt="${playerName}" onerror="this.style.display='none'">`
+                : `<div class="player-avatar" style="display:flex;align-items:center;justify-content:center;font-size:1.4em;">👤</div>`;
+
+            const teamLogoImg = teamLogoSrc
+                ? `<img class="team-logo" src="${teamLogoSrc}" alt="${teamName}" onerror="this.style.display='none'">`
+                : '';
+
+            const injuryTypeRow = inj.injuryType
+                ? `<div class="injury-row">
+                       <span class="injury-label">Type</span>
+                       <span class="injury-value">${escapeHtml(inj.injuryType)}</span>
+                   </div>`
+                : '';
+
+            const descRow = inj.description
+                ? `<div class="injury-row">
+                       <span class="injury-label">Details</span>
+                       <span class="injury-value">${escapeHtml(inj.description)}</span>
+                   </div>`
+                : '';
+
+            const returnRow = inj.returnDate
+                ? `<div class="injury-row">
+                       <span class="injury-label">Return</span>
+                       <span class="injury-value">${escapeHtml(inj.returnDate)}</span>
+                   </div>`
+                : '';
+
+            const dateRow = inj.date
+                ? `<div class="injury-row">
+                       <span class="injury-label">Updated</span>
+                       <span class="injury-value">${escapeHtml(formatDate(inj.date))}</span>
+                   </div>`
+                : '';
+
+            return `
+                <div class="injury-card">
+                    <div class="card-header">
+                        ${photoImg}
+                        <div class="player-info">
+                            <div class="player-name">${playerName}</div>
+                            <div class="player-meta">${position}${teamName}</div>
+                        </div>
+                        ${teamLogoImg}
+                    </div>
+                    <div class="card-body">
+                        <div class="injury-row">
+                            <span class="injury-label">Status</span>
+                            <span class="injury-value">
+                                <span class="status-badge ${statusClass}">${statusLabel}</span>
+                            </span>
+                        </div>
+                        ${injuryTypeRow}
+                        ${descRow}
+                        ${returnRow}
+                        ${dateRow}
+                    </div>
+                </div>`;
+        }
+
+        // Map status string to CSS class
+        function getStatusClass(status) {
+            if (!status) return 'status-default';
+            const s = status.toLowerCase();
+            if (s === 'out') return 'status-out';
+            if (s.includes('day-to-day') || s === 'dtd') return 'status-day-to-day';
+            if (s.includes('questionable')) return 'status-questionable';
+            if (s.includes('probable')) return 'status-probable';
+            return 'status-default';
+        }
+
+        // Update summary counts
+        function updateSummary(injuries) {
+            const counts = { out: 0, dtd: 0, questionable: 0, probable: 0 };
+            injuries.forEach(inj => {
+                const s = (inj.status || '').toLowerCase();
+                if (s === 'out') counts.out++;
+                else if (s.includes('day-to-day') || s === 'dtd') counts.dtd++;
+                else if (s.includes('questionable')) counts.questionable++;
+                else if (s.includes('probable')) counts.probable++;
+            });
+            document.getElementById('countOut').textContent = counts.out;
+            document.getElementById('countDTD').textContent = counts.dtd;
+            document.getElementById('countQ').textContent = counts.questionable;
+            document.getElementById('countP').textContent = counts.probable;
+            document.getElementById('countTotal').textContent = injuries.length;
+        }
+
+        // Format an ISO date string to a readable date
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                return new Date(dateStr).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // Safely escape HTML to prevent XSS
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Schedule auto-refresh
+        function scheduleRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer);
+            refreshTimer = setInterval(() => {
+                fetchInjuries();
+            }, REFRESH_INTERVAL_MS);
+        }
+
+        // Initialize dashboard
+        fetchInjuries();
+        scheduleRefresh();
+    </script>
+</body>
+</html>
