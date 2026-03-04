@@ -374,7 +374,7 @@
         </header>
 
         <div class="auto-refresh-info" id="autoRefreshInfo">
-            ⏱️ Auto-refreshes every 5 minutes. Last refreshed: <span id="refreshTime">—</span>
+            ⏱️ Auto-refreshes every 20 minutes. Last refreshed: <span id="refreshTime">—</span>
         </div>
 
         <div class="controls">
@@ -431,7 +431,7 @@
         const INJURIES_API_URL = 'https://site.web.api.espn.com/apis/site/v2/sports/basketball/nba/injuries';
         // Public CORS proxy used as a fallback when the direct request is blocked
         const CORS_PROXY = 'https://corsproxy.io/?url=';
-        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+        const REFRESH_INTERVAL_MS = 20 * 60 * 1000; // 20 minutes
 
         let allInjuries = [];
         let isFetching = false;
