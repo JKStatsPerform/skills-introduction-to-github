@@ -1,0 +1,9 @@
+{
+  "name": "basketball-analytics-dashboards",
+  "version": "1.0.0",
+  "description": "Real-time dashboards for basketball standings, clinching detection, and automated alerts.",
+  "scripts": {
+    "start": "npx http-server -p 8080 -o"
+  },
+  "license": "MIT"
+}
