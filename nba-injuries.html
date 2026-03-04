@@ -346,6 +346,17 @@
             margin-bottom: 20px;
         }
 
+        .email-notification-banner {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8em;
@@ -376,6 +387,8 @@
         <div class="auto-refresh-info" id="autoRefreshInfo">
             ⏱️ Auto-refreshes every 20 minutes. Last refreshed: <span id="refreshTime">—</span>
         </div>
+
+        <div class="email-notification-banner" id="emailNotificationBanner"></div>
 
         <div class="controls">
             <div class="search-group">
@@ -432,10 +445,15 @@
         // Public CORS proxy used as a fallback when the direct request is blocked
         const CORS_PROXY = 'https://corsproxy.io/?url=';
         const REFRESH_INTERVAL_MS = 20 * 60 * 1000; // 20 minutes
+        const EMAIL_RECIPIENT = 'sportsnews@stats.com';
+        const BANNER_DISPLAY_MS = 60 * 1000; // 60 seconds
 
         let allInjuries = [];
         let isFetching = false;
         let refreshTimer = null;
+        // Tracks the unique keys of injury records seen in the previous fetch;
+        // null means this is the very first load (no email should be sent yet).
+        let previousInjuryKeys = null;
 
         // Attempt a fetch directly, then via CORS proxy if the first call is blocked.
         // Note: the CORS proxy (corsproxy.io) is a public, free-tier service used only
@@ -476,6 +494,7 @@
                 const response = await fetchWithFallback(INJURIES_API_URL);
                 const data = await response.json();
                 allInjuries = parseInjuries(data);
+                checkAndNotify(allInjuries);
                 applyFilters();
                 updateSummary(allInjuries);
                 document.getElementById('summaryBar').style.display = 'flex';
@@ -704,6 +723,68 @@
             refreshTimer = setInterval(() => {
                 fetchInjuries();
             }, REFRESH_INTERVAL_MS);
+        }
+
+        // Return a unique string key for an injury record used to detect changes
+        function injuryKey(inj) {
+            return `${inj.displayName}|${inj.teamName}|${inj.status}|${inj.injuryType}`;
+        }
+
+        // Compare newly fetched injuries against the previous set and, if any are
+        // new or changed, open a pre-filled mailto: link to EMAIL_RECIPIENT.
+        function checkAndNotify(newInjuries) {
+            const newKeys = new Set(newInjuries.map(injuryKey));
+
+            if (previousInjuryKeys === null) {
+                // First page load – just record the baseline; don't send an email.
+                previousInjuryKeys = newKeys;
+                return;
+            }
+
+            const added = newInjuries.filter(inj => !previousInjuryKeys.has(injuryKey(inj)));
+            previousInjuryKeys = newKeys;
+
+            if (added.length > 0) {
+                sendInjuryEmailNotification(added);
+            }
+        }
+
+        // Open a pre-filled mailto: link so the user's email client sends a
+        // notification about new injury entries to EMAIL_RECIPIENT.
+        function sendInjuryEmailNotification(newInjuries) {
+            const subject = `NBA Injury Update: ${newInjuries.length} new report${newInjuries.length === 1 ? '' : 's'}`;
+            const lines = newInjuries.map(inj => {
+                let line = `• ${inj.displayName} (${inj.teamName}) — ${inj.status}`;
+                if (inj.injuryType) line += `: ${inj.injuryType}`;
+                if (inj.description) line += `\n  ${inj.description}`;
+                if (inj.returnDate) line += `\n  Expected return: ${inj.returnDate}`;
+                return line;
+            });
+            const body = [
+                `The following NBA injury update${newInjuries.length === 1 ? ' was' : 's were'} detected at ${new Date().toLocaleString()}:`,
+                '',
+                ...lines,
+                '',
+                'Source: NBA Injury News Dashboard'
+            ].join('\n');
+
+            const mailtoLink = `mailto:${EMAIL_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+            // Attempt to open the email client; if the browser blocks the popup,
+            // fall back to a clickable link so the user can still trigger the email.
+            const opened = window.open(mailtoLink);
+
+            const banner = document.getElementById('emailNotificationBanner');
+            const count = newInjuries.length;
+            const reportWord = `report${count === 1 ? '' : 's'}`;
+            if (opened) {
+                banner.textContent = `📧 ${count} new injury ${reportWord} detected — email notification sent to ${EMAIL_RECIPIENT}.`;
+            } else {
+                banner.innerHTML = `📧 ${count} new injury ${reportWord} detected. <a href="${mailtoLink}">Click here to email ${EMAIL_RECIPIENT}</a>.`;
+            }
+            banner.style.display = 'block';
+            // Auto-hide the banner after BANNER_DISPLAY_MS
+            setTimeout(() => { banner.style.display = 'none'; }, BANNER_DISPLAY_MS);
         }
 
         // Initialize dashboard
