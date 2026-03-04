@@ -74,6 +74,33 @@ The dashboard includes all 31 NCAA Division I conferences with their specific co
 | Ivy League | 14 | West Coast | 18 |
 |  |  | Western Athletic | 16 |
 
+## 💻 Local Development
+
+### Starting the Local Server
+
+Run the following command from the repository root to start a local web server:
+
+```bash
+npm start
+```
+
+This serves all dashboards at **`http://localhost:8080`** and opens the browser automatically.
+
+> **Requires Node.js** (any modern version). `npx` is bundled with Node.js and will download `http-server` automatically on first run — no separate install needed.
+
+### Dashboard URLs
+
+| Dashboard | URL |
+|-----------|-----|
+| College Basketball Standings | `http://localhost:8080/index.html` |
+| Demo (mock data) | `http://localhost:8080/demo.html` |
+| NBA Playoff Alerts | `http://localhost:8080/nba-playoff-alerts.html` |
+| NBA Injury News | `http://localhost:8080/nba-injuries.html` |
+
+You can also open any `.html` file directly in your browser (double-click or drag it into a browser window) — no server required for basic rendering. A local server is only needed to avoid CORS restrictions when fetching live data from the Stats Perform API.
+
+---
+
 ## 🚀 Usage
 
 ### NBA Playoff Alerts Service

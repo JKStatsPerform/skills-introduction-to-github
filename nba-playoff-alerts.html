@@ -707,7 +707,7 @@
                     <div class="error">
                         <strong>Error loading standings:</strong> ${error.message}
                         <br>
-                        <small>The service will retry in 5 minutes.</small>
+                        <small>The service will retry in 20 minutes.</small>
                     </div>
                 `;
             } finally {
@@ -735,14 +735,14 @@
             
             // Update UI
             document.getElementById('statusBox').className = 'status-box status-running';
-            document.getElementById('statusText').textContent = 'Service Running - Monitoring every 5 minutes';
+            document.getElementById('statusText').textContent = 'Service Running - Monitoring every 20 minutes';
             document.getElementById('startStopBtn').textContent = 'Stop Monitoring';
             
             // Initial fetch
             fetchStandings();
             
-            // Set up interval (check every 5 minutes)
-            monitoringInterval = setInterval(fetchStandings, 5 * 60 * 1000);
+            // Set up interval (check every 20 minutes)
+            monitoringInterval = setInterval(fetchStandings, 20 * 60 * 1000);
             
             console.log('NBA Playoff Clinch Alert Service started');
         }

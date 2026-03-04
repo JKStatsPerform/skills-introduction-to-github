@@ -387,7 +387,7 @@
                     <div class="error">
                         <strong>Error loading standings:</strong> ${error.message}
                         <br>
-                        <small>The dashboard will retry in 5 minutes.</small>
+                        <small>The dashboard will retry in 20 minutes.</small>
                     </div>
                 `;
             } finally {
@@ -398,8 +398,8 @@
         // Initial load
         fetchStandings();
 
-        // Auto-refresh every 5 minutes
-        setInterval(fetchStandings, 5 * 60 * 1000);
+        // Auto-refresh every 20 minutes
+        setInterval(fetchStandings, 20 * 60 * 1000);
     </script>
 </body>
 </html>
